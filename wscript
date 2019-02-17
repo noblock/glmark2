@@ -17,6 +17,7 @@ FLAVORS = {
     'wayland-gl' : 'glmark2-wayland',
     'wayland-glesv2' : 'glmark2-es2-wayland',
     'dispmanx-glesv2' : 'glmark2-es2-dispmanx',
+    'malifb-glesv2' : 'glmark2-malifb',
 }
 FLAVORS_STR = ", ".join(FLAVORS.keys())
 
