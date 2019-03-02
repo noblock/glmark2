@@ -18,6 +18,7 @@ FLAVORS = {
     'wayland-glesv2' : 'glmark2-es2-wayland',
     'dispmanx-glesv2' : 'glmark2-es2-dispmanx',
     'malifb-glesv2' : 'glmark2-malifb',
+    'hybrishwcomposer-glesv2' : 'glmark2-hybrishwcomposer',
 }
 FLAVORS_STR = ", ".join(FLAVORS.keys())
 
@@ -132,7 +133,11 @@ def configure(ctx):
                 ('libudev', 'udev', None, list_contains(ctx.options.flavors, 'drm')),
                 ('mirclient','mirclient', '0.13', list_contains(ctx.options.flavors, 'mir')),
                 ('wayland-client','wayland-client', None, list_contains(ctx.options.flavors, 'wayland')),
-                ('wayland-egl','wayland-egl', None, list_contains(ctx.options.flavors, 'wayland'))]
+                ('wayland-egl','wayland-egl', None, list_contains(ctx.options.flavors, 'wayland')),
+                ('hwcomposer-egl','hwcomposer-egl', None, list_contains(ctx.options.flavors, 'hybrishwcomposer')),
+                ('hybris-egl-platform','hybris-egl-platform', None, list_contains(ctx.options.flavors, 'hybrishwcomposer')),
+                ('libhardware','libhardware', None, list_contains(ctx.options.flavors, 'hybrishwcomposer')),
+		]
     for (pkg, uselib, atleast, mandatory) in opt_pkgs:
         if atleast is None:
             ctx.check_cfg(package = pkg, uselib_store = uselib,
@@ -141,6 +146,9 @@ def configure(ctx):
             ctx.check_cfg(package = pkg, uselib_store = uselib, atleast_version=atleast,
                           args = '--cflags --libs', mandatory = mandatory)
 
+    if list_contains(ctx.options.flavors, 'hybrishwcomposer'):
+        ctx.env.append_unique('CXXFLAGS', '-I/usr/local/include -I/usr/local/include/hybris -I/usr/local/include/hybris/hwcomposerwindow -I/usr/local/include/hybris/eglplatformcommon -I/usr/local/include/hybris/android-headers-22'.split(' '))
+	ctx.env.append_unique('LINKFLAGS', '-L/usr/local/lib -lhardware -lhybris-hwcomposerwindow -lhybris-common -lhybris-eglplatformcommon -lEGL -lsync'.split(' '))
 
     # Prepend CXX flags so that they can be overriden by the
     # CXXFLAGS environment variable

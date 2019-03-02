@@ -46,12 +46,16 @@
 #include "native-state-dispmanx.h"
 #elif GLMARK2_USE_MALIFB
 #include "native-state-malifb.h"
+#elif GLMARK2_USE_HYBRISHWCOMPOSER
+#include "native-state-hybrishwcomposer.h"
 #endif
 
 #if GLMARK2_USE_EGL
 #include "gl-state-egl.h"
 #elif GLMARK2_USE_GLX
 #include "gl-state-glx.h"
+#elif GLMARK2_USE_HYBRISHWCOMPOSER
+#include "gl-state-hybrishwcomposer.h"
 #endif
 
 using std::vector;
@@ -176,12 +180,16 @@ main(int argc, char *argv[])
     NativeStateDispmanx native_state;
 #elif GLMARK2_USE_MALIFB
     NativeStateFB native_state;
+#elif GLMARK2_USE_HYBRISHWCOMPOSER
+    NativeStateFB native_state;
 #endif
 
 #if GLMARK2_USE_EGL
     GLStateEGL gl_state;
 #elif GLMARK2_USE_GLX
     GLStateGLX gl_state;
+#elif GLMARK2_USE_HYBRISHWCOMPOSER
+    GLStateEGL gl_state;
 #endif
 
     CanvasGeneric canvas(native_state, gl_state, Options::size.first, Options::size.second);

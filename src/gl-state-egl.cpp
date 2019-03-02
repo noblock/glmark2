@@ -361,9 +361,11 @@ GLStateEGL::valid()
         return false;
     }
 
+#ifndef GLMARK2_USE_HYBRISHWCOMPOSER
     if (!eglSwapInterval(egl_display_, 0)) {
         Log::info("** Failed to set swap interval. Results may be bounded above by refresh rate.\n");
     }
+#endif /*GLMARK2_USE_HYBRISHWCOMPOSER*/
 
     init_gl_extensions();
 
@@ -438,6 +440,8 @@ GLStateEGL::getVisualConfig(GLVisualConfig& vc)
 #elif  GLMARK2_USE_DISPMANX
 #define GLMARK2_NATIVE_EGL_DISPLAY_ENUM 0
 #elif  GLMARK2_USE_MALIFB
+#define GLMARK2_NATIVE_EGL_DISPLAY_ENUM 0
+#elif  GLMARK2_USE_HYBRISHWCOMPOSER
 #define GLMARK2_NATIVE_EGL_DISPLAY_ENUM 0
 #endif
 

@@ -23,6 +23,7 @@ flavor_sources = {
   'wayland-gl' : common_flavor_sources + ['native-state-wayland.cpp', 'gl-state-egl.cpp'],
   'wayland-glesv2' : common_flavor_sources + ['native-state-wayland.cpp', 'gl-state-egl.cpp'],
   'malifb-glesv2' : common_flavor_sources + ['native-state-malifb.cpp', 'gl-state-egl.cpp'],
+  'hybrishwcomposer-glesv2' : common_flavor_sources + ['native-state-hybrishwcomposer.cpp', 'gl-state-egl.cpp'],
 }
 flavor_uselibs = {
   'x11-gl' : ['x11', 'gl', 'matrix-gl', 'common-gl'],
@@ -35,6 +36,7 @@ flavor_uselibs = {
   'wayland-gl' : ['wayland-client', 'wayland-egl', 'egl', 'gl', 'matrix-gl', 'common-gl'],
   'wayland-glesv2' : ['wayland-client', 'wayland-egl', 'egl', 'glesv2', 'matrix-glesv2', 'common-glesv2'],
   'malifb-glesv2' : ['egl', 'glesv2', 'matrix-glesv2', 'common-glesv2'],
+  'hybrishwcomposer-glesv2' : ['egl', 'glesv2', 'matrix-glesv2', 'common-glesv2'],
 }
 flavor_defines = {
   'x11-gl' : ['GLMARK2_USE_X11', 'GLMARK2_USE_GL', 'GLMARK2_USE_GLX'],
@@ -47,6 +49,7 @@ flavor_defines = {
   'wayland-glesv2' : ['GLMARK2_USE_WAYLAND', 'GLMARK2_USE_GLESv2', 'GLMARK2_USE_EGL'],
   'dispmanx-glesv2' : ['GLMARK2_USE_DISPMANX', 'GLMARK2_USE_GLESv2', 'GLMARK2_USE_EGL'],
   'malifb-glesv2' : ['GLMARK2_USE_MALIFB', 'GLMARK2_USE_GLESv2', 'GLMARK2_USE_EGL'],
+  'hybrishwcomposer-glesv2' : ['GLMARK2_USE_HYBRISHWCOMPOSER', 'GLMARK2_USE_GLESv2', 'GLMARK2_USE_EGL'],
 }
 
 includes = ['.', 'scene-ideas', 'scene-terrain']
