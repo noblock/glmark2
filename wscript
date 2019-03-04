@@ -19,6 +19,7 @@ FLAVORS = {
     'dispmanx-glesv2' : 'glmark2-es2-dispmanx',
     'malifb-glesv2' : 'glmark2-malifb',
     'hybrishwcomposer-glesv2' : 'glmark2-hybrishwcomposer',
+    'simpledrm-glesv2' : 'glmark2-es2-simpledrm',
 }
 FLAVORS_STR = ", ".join(FLAVORS.keys())
 
@@ -149,6 +150,9 @@ def configure(ctx):
     if list_contains(ctx.options.flavors, 'hybrishwcomposer'):
         ctx.env.append_unique('CXXFLAGS', '-I/usr/local/include -I/usr/local/include/hybris -I/usr/local/include/hybris/hwcomposerwindow -I/usr/local/include/hybris/eglplatformcommon -I/usr/local/include/hybris/android-headers-22'.split(' '))
 	ctx.env.append_unique('LINKFLAGS', '-L/usr/local/lib -lhardware -lhybris-hwcomposerwindow -lhybris-common -lhybris-eglplatformcommon -lEGL -lsync'.split(' '))
+
+    if list_contains(ctx.options.flavors, 'simpledrm'):
+        ctx.env.append_unique('CXXFLAGS', '-I/usr/X11R6/include'.split(' '))
 
     # Prepend CXX flags so that they can be overriden by the
     # CXXFLAGS environment variable
