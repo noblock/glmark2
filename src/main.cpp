@@ -44,6 +44,8 @@
 #include "native-state-wayland.h"
 #elif GLMARK2_USE_DISPMANX
 #include "native-state-dispmanx.h"
+#elif GLMARK2_USE_WIN32
+#include "native-state-win32.h"
 #elif GLMARK2_USE_MALIFB
 #include "native-state-malifb.h"
 #elif GLMARK2_USE_HYBRISHWCOMPOSER
@@ -54,6 +56,8 @@
 #include "gl-state-egl.h"
 #elif GLMARK2_USE_GLX
 #include "gl-state-glx.h"
+#elif GLMARK2_USE_WGL
+#include "gl-state-wgl.h"
 #elif GLMARK2_USE_HYBRISHWCOMPOSER
 #include "gl-state-hybrishwcomposer.h"
 #endif
@@ -146,7 +150,6 @@ do_validation(Canvas &canvas)
 int
 main(int argc, char *argv[])
 {
-
     if (!Options::parse_args(argc, argv))
         return 1;
 
@@ -178,6 +181,8 @@ main(int argc, char *argv[])
     NativeStateWayland native_state;
 #elif GLMARK2_USE_DISPMANX
     NativeStateDispmanx native_state;
+#elif GLMARK2_USE_WIN32
+    NativeStateWin32 native_state;
 #elif GLMARK2_USE_MALIFB
     NativeStateFB native_state;
 #elif GLMARK2_USE_HYBRISHWCOMPOSER
@@ -188,6 +193,8 @@ main(int argc, char *argv[])
     GLStateEGL gl_state;
 #elif GLMARK2_USE_GLX
     GLStateGLX gl_state;
+#elif GLMARK2_USE_WGL
+    GLStateWGL gl_state;
 #elif GLMARK2_USE_HYBRISHWCOMPOSER
     GLStateEGL gl_state;
 #endif

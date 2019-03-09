@@ -29,14 +29,14 @@
 #include <sstream>
 #include <cstring>
 
-#include <EGL/eglext.h>
-
-#ifndef EGL_EXT_platform_base
-typedef EGLDisplay (EGLAPIENTRYP PFNEGLGETPLATFORMDISPLAYEXTPROC) (EGLenum platform, void *native_display, const EGLint *attrib_list);
-#endif
-
 using std::vector;
 using std::string;
+
+GLADapiproc load_egl_func(const char *name, void *userdata)
+{
+    SharedLibrary *lib = reinterpret_cast<SharedLibrary *>(userdata);
+    return reinterpret_cast<GLADapiproc>(lib->load(name));
+}
 
 /****************************
  * EGLConfig public methods *
@@ -308,6 +308,20 @@ GLStateEGL::~GLStateEGL()
 bool
 GLStateEGL::init_display(void* native_display, GLVisualConfig& visual_config)
 {
+#if defined(WIN32)
+    if (!egl_lib_.open("libEGL.dll")) {
+#else
+    if (!egl_lib_.open_from_alternatives({"libEGL.so", "libEGL.so.1" })) {
+#endif
+        Log::error("Error loading EGL library\n");
+        return false;
+    }
+
+    if (gladLoadEGLUserPtr(EGL_NO_DISPLAY, load_egl_func, &egl_lib_) == 0) {
+        Log::error("Loading EGL entry points failed\n");
+        return false;
+    }
+
     native_display_ = reinterpret_cast<EGLNativeDisplayType>(native_display);
     requested_visual_config_ = visual_config;
 
@@ -322,20 +336,28 @@ GLStateEGL::init_surface(void* native_window)
     return gotValidSurface();
 }
 
-void
+bool
 GLStateEGL::init_gl_extensions()
 {
 #if GLMARK2_USE_GLESv2
+    if (!gladLoadGLES2UserPtr(load_proc, this)) {
+        Log::error("Loading GLESv2 entry points failed.");
+        return false;
+    }
+
     if (GLExtensions::support("GL_OES_mapbuffer")) {
-        GLExtensions::MapBuffer =
-            reinterpret_cast<PFNGLMAPBUFFEROESPROC>(eglGetProcAddress("glMapBufferOES"));
-        GLExtensions::UnmapBuffer =
-            reinterpret_cast<PFNGLUNMAPBUFFEROESPROC>(eglGetProcAddress("glUnmapBufferOES"));
+        GLExtensions::MapBuffer = glMapBufferOES;
+        GLExtensions::UnmapBuffer = glUnmapBufferOES;
     }
 #elif GLMARK2_USE_GL
+    if (!gladLoadGLUserPtr(load_proc, this)) {
+        Log::error("Loading GL entry points failed.");
+        return false;
+    }
     GLExtensions::MapBuffer = glMapBuffer;
     GLExtensions::UnmapBuffer = glUnmapBuffer;
 #endif
+    return true;
 }
 
 bool
@@ -367,7 +389,9 @@ GLStateEGL::valid()
     }
 #endif /*GLMARK2_USE_HYBRISHWCOMPOSER*/
 
-    init_gl_extensions();
+    if (!init_gl_extensions()) {
+        return false;
+    }
 
     return true;
 }
@@ -437,11 +461,12 @@ GLStateEGL::getVisualConfig(GLVisualConfig& vc)
 #define GLMARK2_NATIVE_EGL_DISPLAY_ENUM EGL_PLATFORM_GBM_KHR
 #elif  GLMARK2_USE_MIR
 #define GLMARK2_NATIVE_EGL_DISPLAY_ENUM EGL_PLATFORM_MIR_KHR
-#elif  GLMARK2_USE_DISPMANX
-#define GLMARK2_NATIVE_EGL_DISPLAY_ENUM 0
 #elif  GLMARK2_USE_MALIFB
 #define GLMARK2_NATIVE_EGL_DISPLAY_ENUM 0
 #elif  GLMARK2_USE_HYBRISHWCOMPOSER
+#define GLMARK2_NATIVE_EGL_DISPLAY_ENUM 0
+#else
+// Platforms not in the above platform enums fall back to eglGetDisplay.
 #define GLMARK2_NATIVE_EGL_DISPLAY_ENUM 0
 #endif
 
@@ -454,7 +479,7 @@ GLStateEGL::gotValidDisplay()
     char const * __restrict const supported_extensions =
         eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS);
 
-    if (supported_extensions
+    if (GLMARK2_NATIVE_EGL_DISPLAY_ENUM != 0 && supported_extensions
         && strstr(supported_extensions, "EGL_EXT_platform_base"))
     {
         Log::debug("Using eglGetPlatformDisplayEXT()\n");
@@ -489,6 +514,7 @@ GLStateEGL::gotValidDisplay()
         Log::error("eglGetDisplay() failed with error: 0x%x\n", eglGetError());
         return false;
     }
+
     int egl_major(-1);
     int egl_minor(-1);
     if (!eglInitialize(egl_display_, &egl_major, &egl_minor)) {
@@ -497,13 +523,30 @@ GLStateEGL::gotValidDisplay()
         return false;
     }
 
+    /* Reinitialize GLAD with a known display */
+    if (gladLoadEGLUserPtr(egl_display_, load_egl_func, &egl_lib_) == 0) {
+        Log::error("Loading EGL entry points failed\n");
+        return false;
+    }
+
 #if GLMARK2_USE_GLESv2
     EGLenum apiType(EGL_OPENGL_ES_API);
+#if defined(WIN32)
+    std::initializer_list<const char *> libNames = { "libGLESv2.dll" };
+#else
+    std::initializer_list<const char *> libNames = { "libGLESv2.so", "libGLESv2.so.2" };
+#endif
 #elif GLMARK2_USE_GL
     EGLenum apiType(EGL_OPENGL_API);
+    std::initializer_list<const char *> libNames = { "libGL.so", "libGL.so.1" };
 #endif
     if (!eglBindAPI(apiType)) {
         Log::error("Failed to bind api EGL_OPENGL_ES_API\n");
+        return false;
+    }
+
+    if (!gl_lib_.open_from_alternatives(libNames)) {
+        Log::error("Error loading GL library\n");
         return false;
     }
 
@@ -686,3 +729,16 @@ GLStateEGL::gotValidContext()
     return true;
 }
 
+GLADapiproc
+GLStateEGL::load_proc(const char* name, void* userptr)
+{
+    if (eglGetProcAddress) {
+        GLADapiproc sym = reinterpret_cast<GLADapiproc>(eglGetProcAddress(name));
+        if (sym) {
+            return sym;
+        }
+    }
+
+    GLStateEGL* state = reinterpret_cast<GLStateEGL*>(userptr);
+    return reinterpret_cast<GLADapiproc>(state->gl_lib_.load(name));
+}

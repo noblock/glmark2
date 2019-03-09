@@ -79,13 +79,7 @@ NativeStateFB::display()
 bool
 NativeStateFB::create_window(WindowProperties const& properties)
 {
-    EGLDisplay egl_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-
     properties_ = properties;
-
-    if (egl_display != EGL_NO_DISPLAY)
-        if (strcmp(eglQueryString(egl_display, EGL_VENDOR), "Android") == 0)
-            is_android = true;
 
     if (is_android || properties_.fullscreen) {
         properties_.width = xres;
