@@ -197,14 +197,16 @@ static int glad_egl_find_core_egl(EGLDisplay display) {
     if (display == EGL_NO_DISPLAY) {
         display = eglGetCurrentDisplay();
     }
-#ifdef EGL_VERSION_1_4
+#if defined(EGL_VERSION_1_4) && !defined(__GBM__)
     if (display == EGL_NO_DISPLAY) {
         display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     }
 #endif
+#if !defined(__GBM__)
     if (display == EGL_NO_DISPLAY) {
         return 0;
     }
+#endif
 
     version = eglQueryString(display, EGL_VERSION);
     (void) eglGetError();
